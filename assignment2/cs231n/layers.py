@@ -70,7 +70,7 @@ def affine_backward(dout, cache):
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
-    #                             END OF YOUR CODE                            #
+    #                              END OF YOUR CODE                            #
     ###########################################################################
     return dx, dw, db
 
