@@ -63,7 +63,7 @@ def affine_backward(dout, cache):
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     N = x.shape[0]
     x_reshaped = x.reshape(N, -1)
-    dx = dout.dot(w.T)
+    dx = dout.dot(w.T) # N,M x M,D
     dx = dx.reshape(x.shape)
     dw = x_reshaped.T.dot(dout)
     db = np.sum(dout, axis=0)
@@ -121,7 +121,6 @@ def relu_backward(dout, cache):
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     dx = dout
     dx[x <= 0] = 0
-
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -200,7 +199,22 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        mean = np.mean(x, axis=0)
+        q = x - mean
+        qsq = q*q
+        var = np.sum(qsq, axis=0)/N
+        var_eps = var + eps
+        std_dev = np.sqrt(var_eps)
+
+        x_norm = q/std_dev
+
+        out = x_norm * gamma + beta
+
+        running_mean = momentum * running_mean + (1.0 - momentum) * mean
+        running_var = momentum * running_var + (1.0 - momentum) * var
+
+
+        cache = (x, gamma, beta, q, qsq, var_eps, std_dev, x_norm)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
@@ -215,7 +229,8 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        out = (x- running_mean) / (np.sqrt(running_var + eps))
+        out = gamma * out + beta
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################

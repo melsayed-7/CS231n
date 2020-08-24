@@ -241,6 +241,7 @@ class FullyConnectedNet(object):
         for i in range(2, self.num_layers):
           self.params['W'+repr(i)] = weight_scale * np.random.randn(hidden_dims[i-2], hidden_dims[i-1])
           self.params['b'+repr(i)] = np.zeros(hidden_dims[i-1])
+          
           if self.normalization:
             self.params['gamma'+repr(i)] = np.ones(hidden_dims[i-1])
             self.params['beta'+repr(i)] = np.zeros(hidden_dims[i-1])
