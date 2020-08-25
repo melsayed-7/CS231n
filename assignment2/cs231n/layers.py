@@ -28,14 +28,16 @@ def affine_forward(x, w, b):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     x_reshaped = x.reshape(x.shape[0], -1)
+    print("here")
     out = x_reshaped.dot(w) + b
+    cache = (x, w, b)
+
 
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
-    cache = (x, w, b)
     return out, cache
 
 
@@ -199,22 +201,22 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        mean = np.mean(x, axis=0)
-        q = x - mean
-        qsq = q*q
-        var = np.sum(qsq, axis=0)/N
-        var_eps = var + eps
-        std_dev = np.sqrt(var_eps)
+        mean = np.mean(x, axis=0) #1
+        q = x - mean #2
+        qsq = q*q #3
+        var = np.sum(qsq, axis=0)/N #4
+        var_eps = var + eps #5
+        std_dev = np.sqrt(var_eps) #6
+        inv_dev = 1/std_dev
+        x_norm = q*inv_dev #7
 
-        x_norm = q/std_dev
-
-        out = x_norm * gamma + beta
+        out = x_norm * gamma + beta #8
 
         running_mean = momentum * running_mean + (1.0 - momentum) * mean
         running_var = momentum * running_var + (1.0 - momentum) * var
 
 
-        cache = (x, gamma, beta, q, qsq, var_eps, std_dev, x_norm)
+        cache = (x, gamma, beta, q, qsq, var, var_eps, std_dev, inv_dev, x_norm)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
@@ -271,8 +273,22 @@ def batchnorm_backward(dout, cache):
     # might prove to be helpful.                                              #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    
+    N, D = dout.shape
+    x, gamma, beta, q, qsq, var, var_eps, std_dev, inv_dev, x_norm = cache
 
-    pass
+    dbeta = np.sum(dout, axis=0)
+    dgamma = np.sum(x_norm * dout, axis = 0)
+
+    dx_norm = gamma*dout 
+    dq = inv_dev * dx_norm
+    dinv_dev = np.sum(dx_norm * q, axis=0)
+    dstd_dev = (-1 / (std_dev**2)) * dinv_dev
+    dvar_eps = (1/(2*np.sqrt(var_eps))) * dstd_dev
+    dqsq = (1/N) * dvar_eps
+    dq += (2 * q) * dqsq
+    dmean = np.sum(dq, axis=0)/N
+    dx = dq - dmean    
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -307,8 +323,16 @@ def batchnorm_backward_alt(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
-
+    N, D = dout.shape
+    x, gamma, beta, q, qsq, var, var_eps, std_dev, inv_dev, x_norm = cache
+    
+    dbeta = dout.sum(axis=0)
+    dgamma = np.sum(x_norm * dout, axis=0)
+    
+    dx_norm = gamma * dout
+    dldvar = np.sum(dx_norm*q*(inv_dev**3), axis=0)*(-1.0/2.0)
+    dldmean = np.sum(dx_norm, axis=0)*(-1.0/std_dev) + dldvar * (-2.0/N * np.sum(q, axis=0))
+    dx = dx_norm * inv_dev + dldvar * 2.0 * q / N + dldmean / N
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -822,3 +846,22 @@ def softmax_loss(x, y):
     dx[np.arange(N), y] -= 1
     dx /= N
     return loss, dx
+
+
+
+def affine_bn_relu_forward(x, w, b, gamma, beta, bn_param):
+  """
+  Convenience layer that performs an affine transform followed by a ReLU
+  Inputs:
+  - x: Input to the affine layer
+  - w, b: Weights for the affine layer
+  Returns a tuple of:
+  - out: Output from the ReLU
+  - cache: Object to give to the backward pass
+  """
+  a, fc_cache = affine_forward(x, w, b)
+  bn_out, bn_cache = batchnorm_forward(a, gamma, beta, bn_param)
+  out, relu_cache = relu_forward(bn_out)
+  cache = (fc_cache, relu_cache, bn_cache)
+  return out, cache
+
