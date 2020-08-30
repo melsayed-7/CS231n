@@ -28,11 +28,8 @@ def affine_forward(x, w, b):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     x_reshaped = x.reshape(x.shape[0], -1)
-    print("here")
     out = x_reshaped.dot(w) + b
     cache = (x, w, b)
-
-
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################

@@ -68,9 +68,10 @@ def sgd_momentum(w, dw, config=None):
     # the next_w variable. You should also use and update the velocity v.     #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
-
+    momentum = config["momentum"]
+    learning_rate = config["learning_rate"]
+    v = momentum * v - learning_rate * dw 
+    next_w = w + v
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -107,7 +108,13 @@ def rmsprop(w, dw, config=None):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    lr = config["learning_rate"]
+    dr = config["decay_rate"]
+    eps = config["epsilon"]
+    cache = config["cache"]
+    cache = dr * cache + (1-dr) * dw**2
+    next_w = w-lr*(dw/(np.sqrt(cache)+eps)) 
+    config["cache"] = cache
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -151,8 +158,22 @@ def adam(w, dw, config=None):
     # using it in any calculations.                                           #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
+    lr = config["learning_rate"]
+    b1 = config["beta1"]
+    b2 = config["beta2"]
+    eps = config["epsilon"]
+    m = config["m"]
+    v = config["v"]
+    t = config["t"]
+    t += 1
+    m = b1 * m + (1-b1)*dw
+    v = b2*v + (1-b2) * (dw**2)
+    m_bias = m / (1-b1**t)
+    v_bias = v / (1-b2**t)
+    next_w = w - lr * m_bias / (np.sqrt(v_bias) + eps)
+    config['m'] = m
+    config['v'] = v
+    config['t'] = t
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
